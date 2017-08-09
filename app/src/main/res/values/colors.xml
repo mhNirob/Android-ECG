@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#3F51B5</color>
+    <color name="colorPrimaryDark">#303F9F</color>
+    <color name="colorAccent">#FF4081</color>
+    <color name="colorAlarmButton">#E47297</color>
+    <color name="colorWebButton">#add8e6</color>
+    <color name="colorSummButton">#800080</color>
+    <color name="colorInstButton">#ff4081</color>
+</resources>
