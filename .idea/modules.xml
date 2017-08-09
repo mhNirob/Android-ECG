@@ -3,7 +3,6 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/Android-ECG.iml" filepath="$PROJECT_DIR$/Android-ECG.iml" />
-      <module fileurl="file://$PROJECT_DIR$/BettaSleep.iml" filepath="$PROJECT_DIR$/BettaSleep.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
     </modules>
   </component>

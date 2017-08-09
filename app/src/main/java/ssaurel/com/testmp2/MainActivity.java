@@ -25,6 +25,7 @@ public class MainActivity extends AppCompatActivity {
 
     private RelativeLayout mainLayout;
     private LineChart mChart;
+    private LineChart[] myCharts;
     FakeDataSimple fakeData = new FakeDataSimple();
 
 
@@ -34,61 +35,79 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        initView();
 
         mainLayout = (RelativeLayout) findViewById(R.id.mainLayout);
 
         // create Line Chart
-        mChart = new LineChart(this);
-        mainLayout.addView(mChart);
+        //mChart = (LineChart) findViewById(R.id.myChart);
+        for(int i=0;i<myCharts.length;i++) {
+            // customize line chart
+            myCharts[i].setDescription("");
+            myCharts[i].setNoDataTextDescription("No data");
 
-        mChart.setMinimumWidth(700);
-        mChart.setMinimumHeight(200);
+            // enable touch gestures
+            myCharts[i].setTouchEnabled(true);
 
-        // customize line chart
-        mChart.setDescription("");
-        mChart.setNoDataTextDescription("No data");
+            // we want to also enable scaling an dragging
+            myCharts[i].setDragEnabled(true);
+            myCharts[i].setScaleEnabled(true);
+            myCharts[i].setDrawGridBackground(false);
 
-        // enable touch gestures
-        mChart.setTouchEnabled(true);
+            // enable pinch zoom to avoid scaling x and y axis separately
+            myCharts[i].setPinchZoom(true);
 
-        // we want to also enable scaling an dragging
-        mChart.setDragEnabled(true);
-        mChart.setScaleEnabled(true);
-        mChart.setDrawGridBackground(false);
+            // alternative background color
+            myCharts[i].setBackgroundColor(Color.GRAY);
 
-        // enable pinch zoom to avoid scaling x and y axis separately
-        mChart.setPinchZoom(true);
+            // now we work on data
+            LineData data = new LineData();
+            data.setValueTextColor(Color.WHITE);
 
-        // alternative background color
-        mChart.setBackgroundColor(Color.GRAY);
+            // add data to line chart
+            myCharts[i].setData(data);
 
-        // now we work on data
-        LineData data = new LineData();
-        data.setValueTextColor(Color.WHITE);
+            // get legend object
+            Legend l = myCharts[i].getLegend();
 
-        // add data to line chart
-        mChart.setData(data);
+            // customize legend
+            l.setForm(Legend.LegendForm.LINE);
+            l.setTextColor(Color.BLUE);
 
-        // get legend object
-        Legend l = mChart.getLegend();
+            XAxis xl = myCharts[i].getXAxis();
+            xl.setTextColor(Color.BLACK);
+            xl.setDrawGridLines(false);
+            xl.setAvoidFirstLastClipping(true);
 
-        // customize legend
-        l.setForm(Legend.LegendForm.LINE);
-        l.setTextColor(Color.BLUE);
-
-        XAxis xl = mChart.getXAxis();
-        xl.setTextColor(Color.BLACK);
-        xl.setDrawGridLines(false);
-        xl.setAvoidFirstLastClipping(true);
-
-        YAxis yl = mChart.getAxisLeft();
-        yl.setTextColor(Color.BLACK);
-        yl.setAxisMaxValue(120f);
-        yl.setDrawGridLines(true);
+            YAxis yl = myCharts[i].getAxisLeft();
+            yl.setTextColor(Color.BLACK);
+            yl.setAxisMaxValue(120f);
+            yl.setDrawGridLines(true);
 
 
-        YAxis yl2 = mChart.getAxisRight();
-        yl2.setEnabled(false);
+            YAxis yl2 = myCharts[i].getAxisRight();
+            yl2.setEnabled(false);
+        }
+
+    }
+
+    private void initView() {
+        myCharts = new LineChart[12];
+        myCharts[0] = (LineChart) findViewById(R.id.myChart1);
+        myCharts[1] = (LineChart) findViewById(R.id.myChart2);
+        myCharts[2] = (LineChart) findViewById(R.id.myChart3);
+        myCharts[3] = (LineChart) findViewById(R.id.myChart4);
+        myCharts[4] = (LineChart) findViewById(R.id.myChart5);
+        myCharts[5] = (LineChart) findViewById(R.id.myChart6);
+        myCharts[6] = (LineChart) findViewById(R.id.myChart7);
+        myCharts[7] = (LineChart) findViewById(R.id.myChart8);
+        myCharts[8] = (LineChart) findViewById(R.id.myChart9);
+        myCharts[9] = (LineChart) findViewById(R.id.myChart10);
+        myCharts[10] = (LineChart) findViewById(R.id.myChart11);
+        myCharts[11] = (LineChart) findViewById(R.id.myChart12);
+        //myCharts[0] = (LineChart) findViewById(R.id.myChart1);
+
+
 
     }
 
@@ -103,19 +122,22 @@ public class MainActivity extends AppCompatActivity {
                 // add 100 entries
                 float len = new FakeDataSimple().getLength();
                 for (int i = 0; i < len; i++) {
+                    final int c = i;
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            addEntry(); // chart is notified of update in addEntry method
+                            addEntry(c); // chart is notified of update in addEntry method
                         }
                     });
 
                     // pause between adds
-                    try {
-                        Thread.sleep(100);
-                    } catch (InterruptedException e) {
-                        // manage error ...
+                    if(i%12==11) {
+                        try {
+                            Thread.sleep(100);
+                        } catch (InterruptedException e) {
+                            // manage error ...
 
+                        }
                     }
                 }
             }
@@ -124,38 +146,40 @@ public class MainActivity extends AppCompatActivity {
 
     // we need to create a method to add an entry to the line chart
 
-    private void addEntry() {
-        LineData data = mChart.getData();
+    private void addEntry(int dataNum) {
+            int chartNo = dataNum%12;
+            LineData data = myCharts[chartNo].getData();
 
-        if (data != null) {
-            LineDataSet set = (LineDataSet) data.getDataSetByIndex(0);
+            if (data != null) {
+                LineDataSet set = (LineDataSet) data.getDataSetByIndex(0);
 
-            if (set == null) {
-                // creation if null
-                set = createSet();
-                data.addDataSet(set);
-            }
+                if (set == null) {
+                    // creation if null
+                    set = createSet();
+                    data.addDataSet(set);
+                }
 
-            // add a new random value
-            data.addXValue("");
+                // add a new random value
+                data.addXValue("");
 //            data.addEntry(new Entry((float) (Math.random() * 110) + 5f, set
 //                    .getEntryCount()), 0);
 
-            float datum = fakeData.getData();
-            data.addEntry(new Entry((float) datum, set.getEntryCount()),0);
+                float datum = fakeData.getData();
+                data.addEntry(new Entry((float) datum, set.getEntryCount()), 0);
 
-            // notify chart data have changed
-            mChart.notifyDataSetChanged();
+                // notify chart data have changed
+                myCharts[chartNo].notifyDataSetChanged();
 
-            // limit number of visible entries
-            mChart.setVisibleXRangeMinimum(4);
+                // limit number of visible entries
+                myCharts[chartNo].setVisibleXRangeMinimum(4);
 
-            // but also ACTUALLY limit number of visible entries
-            mChart.setVisibleXRangeMaximum(100);
+                // but also ACTUALLY limit number of visible entries
+                myCharts[chartNo].setVisibleXRangeMaximum(100);
 
-            // scroll to the last entry
-            mChart.moveViewToX(data.getXValCount() - 7);
-        }
+                // scroll to the last entry
+                myCharts[chartNo].moveViewToX(data.getXValCount() - 7);
+            }
+
     }
 
 
