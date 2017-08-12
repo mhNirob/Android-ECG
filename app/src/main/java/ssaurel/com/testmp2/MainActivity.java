@@ -81,7 +81,8 @@ public class MainActivity extends AppCompatActivity {
 
             YAxis yl = myCharts[i].getAxisLeft();
             yl.setTextColor(Color.BLACK);
-            yl.setAxisMaxValue(120f);
+            yl.setAxisMaxValue(1500f);
+            yl.setAxisMinValue(0f);
             yl.setDrawGridLines(true);
 
 
@@ -155,7 +156,7 @@ public class MainActivity extends AppCompatActivity {
 
                 if (set == null) {
                     // creation if null
-                    set = createSet();
+                    set = createSet(chartNo);
                     data.addDataSet(set);
                 }
 
@@ -184,8 +185,9 @@ public class MainActivity extends AppCompatActivity {
 
 
     // method to create set
-    private LineDataSet createSet() {
-        LineDataSet set = new LineDataSet(null, "Sample ECG data");
+    private LineDataSet createSet(int channel) {
+        String strChannel = Integer.toString(channel+1);
+        LineDataSet set = new LineDataSet(null, strChannel);
         set.setDrawCubic(true);
         set.setCubicIntensity(0.2f);
         set.setAxisDependency(YAxis.AxisDependency.LEFT);

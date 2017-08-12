@@ -11,7 +11,7 @@ public class FakeDataSimple {
     public FakeDataSimple(){
 
         int[] in_fakeECG = new int[]{
-                1035,
+                100,
                 1035,
                 1041,
                 1041,
