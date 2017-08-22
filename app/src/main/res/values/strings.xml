@@ -5,4 +5,5 @@
     <string name="alarm">Alarm</string>
     <string name="summ">Summ.</string>
     <string name="inst">Inst.</string>
+    <string name="title_activity_choose_device">ChooseDeviceActivity</string>
 </resources>
