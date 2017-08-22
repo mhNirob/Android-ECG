@@ -1,15 +1,18 @@
 package ssaurel.com.testmp2;
 
+import android.bluetooth.BluetoothSocket;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.RelativeLayout;
+import android.widget.Toast;
 
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.Legend;
@@ -20,6 +23,11 @@ import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
 import com.github.mikephil.charting.utils.ColorTemplate;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.UUID;
+
 
 public class MainActivity extends AppCompatActivity {
 
@@ -28,6 +36,11 @@ public class MainActivity extends AppCompatActivity {
     private LineChart[] myCharts;
     FakeDataSimple fakeData = new FakeDataSimple();
 
+    private final UUID PORT_UUID = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");//Serial Port Service ID
+    private BluetoothSocket socket;
+    private OutputStream outputStream;
+    private boolean isAppRunning;
+    private InputStream inputStream;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,6 +49,8 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         initView();
+
+        Toast.makeText(this,ChooseDeviceActivity.device.getName(),Toast.LENGTH_LONG).show();
 
         mainLayout = (RelativeLayout) findViewById(R.id.mainLayout);
 
@@ -92,6 +107,68 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    public boolean BTconnect()
+    {
+        boolean connected=true;
+        try {
+            socket = ChooseDeviceActivity.device.createRfcommSocketToServiceRecord(PORT_UUID);
+            socket.connect();
+        } catch (IOException e) {
+            e.printStackTrace();
+            connected=false;
+        }
+        if(connected)
+        {
+            try {
+                outputStream=socket.getOutputStream();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            try {
+                inputStream=socket.getInputStream();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        }
+
+
+        return connected;
+    }
+
+    public class ReceiverThread extends Thread
+    {
+        public void run()
+        {
+            BTconnect();
+            while(isAppRunning) {
+                try {
+                    int byteCount = inputStream.available();
+                    if (byteCount > 0) {
+                        byte[] rawBytes = new byte[byteCount];
+                        inputStream.read(rawBytes);
+                        final String string = new String(rawBytes, "UTF-8");
+                        Log.i("nirob",string);
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(MainActivity.this,string,Toast.LENGTH_LONG).show();
+                            }
+                        });
+
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+
+
+        }
+
+
+    }
+
+
     private void initView() {
         myCharts = new LineChart[12];
         myCharts[0] = (LineChart) findViewById(R.id.myChart1);
@@ -115,6 +192,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        isAppRunning = true;
+        new ReceiverThread().start();
         // now we're going to simulate real time data addition
 
         new Thread(new Runnable() {
@@ -145,6 +224,11 @@ public class MainActivity extends AppCompatActivity {
         }).start();
     }
 
+    @Override
+    protected void onStop() {
+        super.onStop();
+        isAppRunning = false;
+    }
     // we need to create a method to add an entry to the line chart
 
     private void addEntry(int dataNum) {
