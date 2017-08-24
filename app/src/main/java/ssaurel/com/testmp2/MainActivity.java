@@ -42,6 +42,11 @@ public class MainActivity extends AppCompatActivity {
     private boolean isAppRunning;
     private InputStream inputStream;
 
+    public static String voltString = "";
+    public static String tempvoltString = "";
+    public static int lineNo = 0;
+    public  static  boolean complete = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -96,7 +101,7 @@ public class MainActivity extends AppCompatActivity {
 
             YAxis yl = myCharts[i].getAxisLeft();
             yl.setTextColor(Color.BLACK);
-            yl.setAxisMaxValue(1500f);
+            yl.setAxisMaxValue(1024f);
             yl.setAxisMinValue(0f);
             yl.setDrawGridLines(true);
 
@@ -148,13 +153,24 @@ public class MainActivity extends AppCompatActivity {
                         byte[] rawBytes = new byte[byteCount];
                         inputStream.read(rawBytes);
                         final String string = new String(rawBytes, "UTF-8");
-                        Log.i("nirob",string);
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                Toast.makeText(MainActivity.this,string,Toast.LENGTH_LONG).show();
-                            }
-                        });
+                        tempvoltString += string;
+                        String newline = System.getProperty("line.separator");
+                        boolean hasNewline = tempvoltString.contains(newline);
+                        if(hasNewline) {
+                            String[] separated = tempvoltString.split("\n");
+                            voltString = separated[0];
+                            tempvoltString = separated[1];
+                            complete = true;
+                            addEntry(lineNo);
+                            lineNo++;
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Toast.makeText(MainActivity.this,voltString,Toast.LENGTH_LONG).show();
+                                }
+                            });
+                        }
+                        Log.i("nirob",voltString);
 
                     }
                 } catch (Exception e) {
@@ -188,14 +204,14 @@ public class MainActivity extends AppCompatActivity {
 
 
     }
-
     @Override
     protected void onResume() {
+
         super.onResume();
         isAppRunning = true;
         new ReceiverThread().start();
         // now we're going to simulate real time data addition
-
+        /*
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -203,25 +219,35 @@ public class MainActivity extends AppCompatActivity {
                 float len = new FakeDataSimple().getLength();
                 for (int i = 0; i < len; i++) {
                     final int c = i;
-                    runOnUiThread(new Runnable() {
+                    runOnUiThread(new Runnable(){
                         @Override
                         public void run() {
-                            addEntry(c); // chart is notified of update in addEntry method
+                            addEntry(lineNo); // chart is notified of update in addEntry method
                         }
                     });
 
                     // pause between adds
+
                     if(i%12==11) {
                         try {
-                            Thread.sleep(100);
+                            Thread.sleep(70);
                         } catch (InterruptedException e) {
                             // manage error ...
 
                         }
                     }
-                }
+
+                    try {
+                        Thread.sleep(70);
+                    } catch (InterruptedException e) {
+                        // manage error ...
+
+                    }
+
+                //}
             }
         }).start();
+        */
     }
 
     @Override
@@ -230,7 +256,7 @@ public class MainActivity extends AppCompatActivity {
         isAppRunning = false;
     }
     // we need to create a method to add an entry to the line chart
-
+/*
     private void addEntry(int dataNum) {
             int chartNo = dataNum%12;
             LineData data = myCharts[chartNo].getData();
@@ -266,7 +292,49 @@ public class MainActivity extends AppCompatActivity {
             }
 
     }
+*/
 
+    private void addEntry(int dataNum) {
+        //String vdatum = fakeData.getData();
+        if(complete) {
+            Log.i("yes ", voltString);
+            String[] separated = voltString.split(":");
+            for (int chartNo = 0; chartNo < 12; chartNo++) {
+                LineData data = myCharts[chartNo].getData();
+                if (data != null) {
+                    LineDataSet set = (LineDataSet) data.getDataSetByIndex(0);
+
+                    if (set == null) {
+                        // creation if null
+                        set = createSet(chartNo);
+                        data.addDataSet(set);
+                    }
+
+                    // add a new random value
+                    data.addXValue("");
+//            data.addEntry(new Entry((float) (Math.random() * 110) + 5f, set
+//                    .getEntryCount()), 0);
+                    float datum = Float.valueOf(separated[chartNo]);
+
+                    data.addEntry(new Entry((float) datum, set.getEntryCount()), 0);
+
+                    // notify chart data have changed
+                    myCharts[chartNo].notifyDataSetChanged();
+
+                    // limit number of visible entries
+                    myCharts[chartNo].setVisibleXRangeMinimum(4);
+
+                    // but also ACTUALLY limit number of visible entries
+                    myCharts[chartNo].setVisibleXRangeMaximum(100);
+
+                    // scroll to the last entry
+                    myCharts[chartNo].moveViewToX(data.getXValCount() - 7);
+                }
+            }
+            complete = false;
+        }
+
+    }
 
     // method to create set
     private LineDataSet createSet(int channel) {
